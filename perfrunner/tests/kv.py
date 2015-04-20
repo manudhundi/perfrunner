@@ -30,6 +30,8 @@ class KVTest(PerfTest):
                         "access" phase or active workload
     """
 
+    COLLECTORS = {'replicate_latency': True}
+
     @with_stats
     def access(self):
         super(KVTest, self).timer()

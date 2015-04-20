@@ -4,23 +4,23 @@ run_cbcollect_info = false
 
 [cluster]
 mem_quota = 2048
-initial_nodes = 1
+initial_nodes = 2
 num_buckets = 1
 
 [load]
-items = 10000
+items = 1000000
 size = 1024
 workers = 20
 
 [access]
 updates = 100
 size = 1024
-throughput = 6000
+throughput = 10000
 workers = 20
-items = 10000
-time = 60
+items = 1000000
+time = 900
 async = 1
-dcp_workers=20
+dcp_workers=0
 
 [worker_settings]
 reuse_workspace = true

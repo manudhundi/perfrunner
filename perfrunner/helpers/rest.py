@@ -79,7 +79,14 @@ class RestHelper(object):
         data = {'memoryQuota': mem_quota}
         self.post(url=api, data=data)
 
-    def add_node(self, host_port, new_host, role=None, uri=None):
+    def set_services(self, host_port, services):
+        logger.info('Configuring services on master node: {}'.format(host_port))
+
+        api = 'http://{}/node/controller/setupServices'.format(host_port)
+        data = {'services': services}
+        self.post(url=api, data=data)
+
+    def add_node(self, host_port, new_host, services=None, uri=None):
         logger.info('Adding new node: {}'.format(new_host))
 
         if uri:
@@ -90,7 +97,7 @@ class RestHelper(object):
             'hostname': new_host,
             'user': self.rest_username,
             'password': self.rest_password,
-            'services': role
+            'services': services
         }
         self.post(url=api, data=data)
 
@@ -355,9 +362,17 @@ class RestHelper(object):
 
     def exec_n1ql_stmnt(self, host, stmnt):
         logger.info('Executing: {}'.format(stmnt))
+        api = 'http://{}:8093/query/service'.format(host)
+        data = {
+            'statement': '{0}'.format(stmnt)
+        }
+        self.post(url=api, data=data)
+
+    def n1ql_query(self, host, stmnt):
+        logger.info('Executing: {}'.format(stmnt))
         api = 'http://{}:8093/query'.format(host)
-        params = {'q': stmnt}
-        self.get(url=api, params=params)
+        headers = {'content-type': 'text/plain'}
+        self.post(url=api, data=stmnt, headers=headers)
 
 
 class SyncGatewayRequestHelper(RestHelper):

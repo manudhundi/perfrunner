@@ -58,7 +58,7 @@ class ClusterSpec(Config):
     @safe
     def yield_clusters(self):
         for cluster_name, servers in self.config.items('clusters'):
-            yield cluster_name, servers.split()
+            yield cluster_name, [s.split(',', 1)[0] for s in servers.split()]
 
     @safe
     def yield_masters(self):
@@ -72,40 +72,33 @@ class ClusterSpec(Config):
                 yield server
 
     @safe
-    def yield_n1qlbyclusters(self):
-        for cluster_name, servers in self.config.items('n1ql'):
-                yield cluster_name, servers.split()
-
-    @safe
-    def yield_indexbyclusters(self):
-        for cluster_name, servers in self.config.items('index'):
-                yield cluster_name, servers.split()
-
-    @safe
-    def yield_n1qlservers(self):
-        for _, servers in self.yield_n1qlbyclusters():
-                yield servers
-
-    @safe
-    def yield_indexservers(self):
-        for _, servers in self.yield_indexbyclusters():
-                yield servers
-
-    @safe
-    def yield_n1qlserverss(self):
-        for _, servers in self.yield_n1qlbyclusters():
-                yield servers
-
-    @safe
-    def yield_indexserverss(self):
-        for _, servers in self.yield_indexbyclusters():
-                yield servers
-
-    @safe
     def yield_hostnames(self):
         for _, servers in self.yield_clusters():
             for server in servers:
                 yield server.split(':')[0]
+
+    @safe
+    def yield_servers_by_role(self, role):
+        for name, servers in self.config.items('clusters'):
+            has_service = []
+            for server in servers.split():
+                if role in server.split(',')[1:]:
+                    has_service.append(server.split(',')[0])
+            yield name, has_service
+
+    @property
+    @safe
+    def roles(self):
+        server_roles = {}
+        for _, node in self.config.items('clusters'):
+            for server in node.split():
+                name = server.split(',', 1)[0]
+                if ',' in server:
+                    server_roles[name] = server.split(',', 1)[1]
+                else:  # For backward compatibility, set to kv if not specified
+                    server_roles[name] = 'kv'
+
+        return server_roles
 
     @property
     @safe
@@ -206,6 +199,11 @@ class TestConfig(Config):
     def index_settings(self):
         options = self._get_options_as_dict('index')
         return IndexSettings(options)
+
+    @property
+    def n1ql_settings(self):
+        options = self._get_options_as_dict('n1ql')
+        return N1QLSettings(options)
 
     @property
     def access_settings(self):
@@ -405,6 +403,7 @@ class PhaseSettings(object):
     OPS = 0
     THROUGHPUT = float('inf')
     QUERY_THROUGHPUT = float('inf')
+    N1QL_THROUGHPUT = float('inf')
 
     DOC_GEN = 'old'
     ITEMS = 0
@@ -415,6 +414,7 @@ class PhaseSettings(object):
 
     WORKERS = 12
     QUERY_WORKERS = 0
+    N1QL_WORKERS = 0
     DCP_WORKERS = 0
 
     SEQ_READS = False
@@ -436,6 +436,8 @@ class PhaseSettings(object):
         self.throughput = float(options.get('throughput', self.THROUGHPUT))
         self.query_throughput = float(options.get('query_throughput',
                                                   self.QUERY_THROUGHPUT))
+        self.n1ql_throughput = float(options.get('n1ql_throughput',
+                                                 self.N1QL_THROUGHPUT))
 
         self.doc_gen = options.get('doc_gen', self.DOC_GEN)
         self.size = int(options.get('size', self.SIZE))
@@ -448,16 +450,22 @@ class PhaseSettings(object):
         self.workers = int(options.get('workers', self.WORKERS))
         self.query_workers = int(options.get('query_workers',
                                              self.QUERY_WORKERS))
+        self.n1ql_workers = int(options.get('n1ql_workers',
+                                            self.N1QL_WORKERS))
         self.dcp_workers = int(options.get('dcp_workers', self.DCP_WORKERS))
+
+        self.n1ql_queries = []
+        if 'n1ql_queries' in options:
+            self.n1ql_queries = options.get('n1ql_queries').strip().split('\n')
 
         self.seq_reads = self.SEQ_READS
         self.seq_updates = self.SEQ_UPDATES
 
-        self.n1ql = None
         self.ddocs = None
         self.index_type = None
         self.qparams = {}
 
+        self.n1ql = None
         self.time = int(options.get('time', self.TIME))
 
         self.async = bool(int(options.get('async', self.ASYNC)))
@@ -510,6 +518,14 @@ class IndexSettings(PhaseSettings):
         self.disabled_updates = int(options.get('disabled_updates',
                                                 self.DISABLED_UPDATES))
         self.index_type = options.get('index_type')
+
+
+class N1QLSettings(PhaseSettings):
+
+    def __init__(self, options):
+        self.indexes = []
+        if 'indexes' in options:
+            self.indexes = options.get('indexes').strip().split('\n')
 
 
 class AccessSettings(PhaseSettings):

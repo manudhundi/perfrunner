@@ -23,15 +23,14 @@ class ClusterManager(object):
         self.monitor = Monitor(cluster_spec)
         self.memcached = MemcachedHelper(test_config)
 
-        self.clusters = cluster_spec.yield_clusters()
-        self.index = cluster_spec.yield_indexservers
-        self.n1ql = cluster_spec.yield_n1qlservers
+        self.clusters = cluster_spec.yield_clusters
         self.servers = cluster_spec.yield_servers
         self.masters = cluster_spec.yield_masters
 
         self.initial_nodes = test_config.cluster.initial_nodes
         self.mem_quota = test_config.cluster.mem_quota
         self.group_number = test_config.cluster.group_number or 1
+        self.roles = cluster_spec.roles
 
     def set_data_path(self):
         if self.cluster_spec.paths:
@@ -47,6 +46,12 @@ class ClusterManager(object):
         for server in self.servers():
             self.rest.set_mem_quota(server, self.mem_quota)
 
+    def set_services(self):
+        for (_, servers), initial_nodes in zip(self.clusters(),
+                                               self.initial_nodes):
+            master = servers[0]
+            self.rest.set_services(master, self.roles[master])
+
     def disable_moxi(self):
         if self.test_config.cluster.disable_moxi is not None:
             self.remote.disable_moxi()
@@ -58,8 +63,9 @@ class ClusterManager(object):
                 self.rest.create_server_group(master, name=name)
 
     def add_nodes(self):
-        for (_, servers), initial_nodes in zip(self.clusters,
+        for (_, servers), initial_nodes in zip(self.clusters(),
                                                self.initial_nodes):
+
             if initial_nodes < 2:  # Single-node cluster
                 continue
 
@@ -71,21 +77,10 @@ class ClusterManager(object):
                 groups = {}
             for i, host_port in enumerate(servers[1:initial_nodes],
                                           start=1):
-                host = host_port.split(':')[0]
-                role = None
-                if self.cluster_spec.config.has_section('index'):
-                    for node in self.index():
-                        if host in node:
-                            print "host: %s in index\n" % host
-                            role = 'index'
-                if self.cluster_spec.config.has_section('n1ql'):
-                    for node in self.n1ql():
-                        if host in node:
-                            print "host: %s in n1ql\n" % host
-                            role = 'n1ql'
                 uri = groups.get(server_group(servers[:initial_nodes],
                                               self.group_number, i))
-                self.rest.add_node(master, host, role, uri)
+                self.rest.add_node(master, host_port, self.roles[host_port],
+                                   uri)
 
             # Rebalance
             master = servers[0]
@@ -243,8 +238,9 @@ def main():
         cm.disable_moxi()
     cm.configure_internal_settings()
     cm.set_data_path()
-    cm.set_auth()
+    cm.set_services()
     cm.set_mem_quota()
+    cm.set_auth()
 
     time.sleep(30)  # crutch
 

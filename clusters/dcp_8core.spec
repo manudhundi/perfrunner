@@ -1,0 +1,24 @@
+[clusters]
+mikewied =
+    172.23.106.198:8091
+    172.23.106.199:8091
+
+[clients]
+hosts =
+    172.23.106.200
+credentials = root:couchbase
+
+[storage]
+data = /data
+index = /data
+
+[credentials]
+rest = Administrator:password
+ssh = root:couchbase
+
+[parameters]
+Platform = VM
+OS = Centos 6.6
+CPU = Intel Xeon X-5650 (4 cores)
+Memory = 4GB
+Disk = HDD

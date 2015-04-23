@@ -1,7 +1,8 @@
 
 from perfrunner.tests import PerfTest
 from perfrunner.helpers.cbmonitor import with_stats
-
+from perfrunner.workloads.viewgen import ViewGen
+from perfrunner.tests.index import IndexTest
 
 class ReplicationTest(PerfTest):
 
@@ -22,3 +23,25 @@ class ReplicationTest(PerfTest):
         self.workload = self.test_config.access_settings
         self.access_bg()
         self.access()
+
+class ViewTest(IndexTest):
+
+    COLLECTORS = {'replicate_latency': True}
+
+    def __init__(self, *args):
+        super(ViewTest, self).__init__(*args)
+
+    @with_stats
+    def access(self):
+        super(ViewTest, self).timer()
+
+    def run(self):
+        self.load()
+        self.wait_for_persistence()
+        self.define_ddocs()
+        self.build_index()
+        self.compact_bucket()
+
+        self.workload = self.test_config.access_settings
+        self.access_bg()
+		self.access() 

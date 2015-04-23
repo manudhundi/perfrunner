@@ -1,0 +1,28 @@
+[test_case]
+test = perfrunner.tests.dcp.ViewTest
+run_cbcollect_info = false
+
+[cluster]
+mem_quota = 2048
+initial_nodes = 2
+num_buckets = 1
+
+[load]
+items = 1000000
+size = 1024
+workers = 20
+
+[index]	
+views = [1]
+
+[access]
+creates = 0
+reads = 0
+updates = 100
+deletes = 0
+size = 1024
+throughput = 6000
+workers = 20
+items = 1000000
+async = 1
+time = 900

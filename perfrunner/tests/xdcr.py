@@ -28,6 +28,7 @@ class XdcrTest(PerfTest):
         self.settings = self.test_config.xdcr_settings
 
     def _start_replication(self, m1, m2):
+        print "_start_replication 1"
         name = target_hash(m1, m2)
         certificate = self.settings.use_ssl and self.rest.get_certificate(m2)
         self.rest.add_remote_cluster(m1, m2, name, certificate)
@@ -39,16 +40,20 @@ class XdcrTest(PerfTest):
                 'fromBucket': bucket,
                 'toCluster': name
             }
+            print "_start_replication 2"
             if self.settings.replication_protocol:
                 params['type'] = self.settings.replication_protocol
             self.rest.start_replication(m1, params)
 
     def enable_xdcr(self):
+        print "In func() enable_xdcr"
         m1, m2 = self.cluster_spec.yield_masters()
 
         if self.settings.replication_type == 'unidir':
+            print "enable_xdcr: unidir"
             self._start_replication(m1, m2)
         if self.settings.replication_type == 'bidir':
+            print "enable_xdcr: bidir"
             self._start_replication(m1, m2)
             self._start_replication(m2, m1)
 

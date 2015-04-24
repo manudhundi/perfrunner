@@ -3,7 +3,6 @@ from perfrunner.tests import PerfTest, TargetIterator
 from perfrunner.helpers.cbmonitor import with_stats
 from perfrunner.workloads.viewgen import ViewGen
 from perfrunner.tests.index import IndexTest
-from perfrunner.tests.xdcr import XdcrTest
 from perfrunner.helpers.misc import log_phase, target_hash
 from perfrunner.settings import TargetSettings
 
@@ -48,22 +47,3 @@ class ViewTest(IndexTest):
         self.workload = self.test_config.access_settings
         self.access_bg()
 	self.access() 
-	
-class DcpXdcrTest(XdcrTest):
-
-    COLLECTORS = {'replicate_latency': True}
-
-    def __init__(self, *args, **kwargs):
-        super(DcpXdcrTest, self).__init__(*args, **kwargs)
-        self.target_iterator = TargetIterator(self.cluster_spec,
-                                              self.test_config,
-                                              prefix='symmetric')
-
-    def load(self):
-        load_settings = self.test_config.load_settings
-        log_phase('load phase', load_settings)
-        src_target_iterator = SrcTargetIterator(self.cluster_spec,
-                                                self.test_config,
-                                                prefix='symmetric')
-        self.worker_manager.run_workload(load_settings, src_target_iterator)
-        self.worker_manager.wait_for_workers()

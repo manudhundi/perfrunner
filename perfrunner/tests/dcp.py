@@ -52,11 +52,11 @@ class DcpXdcrTest(XdcrTest):
     COLLECTORS = {'replicate_latency': True}
 
     def __init__(self, *args):
-        super(XdcrTest, self).__init__(*args)
+        super(DcpXdcrTest, self).__init__(*args)
 
     @with_stats
     def access(self):
-        super(XdcrTest, self).timer()
+        super(DcpXdcrTest, self).timer()
 
     def run(self):
         self.load()

@@ -1,5 +1,5 @@
 [test_case]
-test = perfrunner.tests.dcp.DcpXdcrTest
+test = perfrunner.tests.dcp.SymmetricXdcrTest
 
 [cluster]
 mem_quota = 2048

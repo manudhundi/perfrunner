@@ -5,7 +5,7 @@ mikewied =
 
 [clients]
 hosts =
-    172.23.106.200
+    172.23.105.215
 credentials = root:couchbase
 
 [storage]

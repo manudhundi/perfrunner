@@ -127,6 +127,8 @@ class SymmetricXdcrTest(XdcrTest):
     Bad name for uni-directional scenario.
     """
 
+    COLLECTORS = {'replicate_latency': True}
+
     def __init__(self, *args, **kwargs):
         super(SymmetricXdcrTest, self).__init__(*args, **kwargs)
         self.target_iterator = TargetIterator(self.cluster_spec,

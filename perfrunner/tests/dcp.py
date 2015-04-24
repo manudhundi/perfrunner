@@ -1,9 +1,11 @@
 
-from perfrunner.tests import PerfTest
+from perfrunner.tests import PerfTest, TargetIterator
 from perfrunner.helpers.cbmonitor import with_stats
 from perfrunner.workloads.viewgen import ViewGen
 from perfrunner.tests.index import IndexTest
 from perfrunner.tests.xdcr import XdcrTest
+from perfrunner.helpers.misc import log_phase, target_hash
+from perfrunner.settings import TargetSettings
 
 class ReplicationTest(PerfTest):
 

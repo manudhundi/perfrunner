@@ -16,3 +16,15 @@ workers = 20
 
 [xdcr]
 replication_type = unidir
+
+[access]
+creates = 0
+reads = 0
+updates = 100
+deletes = 0
+throughput = 6000
+items = 1000000
+size = 1024
+workers = 20
+async = 1
+time = 900

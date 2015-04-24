@@ -51,22 +51,17 @@ class DcpXdcrTest(XdcrTest):
 
     COLLECTORS = {'replicate_latency': True}
 
-    def __init__(self, *args):
-        super(DcpXdcrTest, self).__init__(*args)
+    def __init__(self, *args, **kwargs):
+        super(DcpXdcrTest, self).__init__(*args, **kwargs)
+        self.target_iterator = TargetIterator(self.cluster_spec,
+                                              self.test_config,
+                                              prefix='symmetric')
 
-    @with_stats
-    def access(self):
-        super(DcpXdcrTest, self).timer()
-
-    def run(self):
-        self.load()
-        self.wait_for_persistence()
-
-        print "enable xdcr start"
-        self.enable_xdcr()
-        print "enable xdcr end"
-        self.compact_bucket()
-
-        self.workload = self.test_config.access_settings
-        self.access_bg()
-	self.access() 
+    def load(self):
+        load_settings = self.test_config.load_settings
+        log_phase('load phase', load_settings)
+        src_target_iterator = SrcTargetIterator(self.cluster_spec,
+                                                self.test_config,
+                                                prefix='symmetric')
+        self.worker_manager.run_workload(load_settings, src_target_iterator)
+        self.worker_manager.wait_for_workers()

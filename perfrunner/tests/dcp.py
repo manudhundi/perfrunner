@@ -62,7 +62,9 @@ class DcpXdcrTest(XdcrTest):
         self.load()
         self.wait_for_persistence()
 
+        print "enable xdcr start"
         self.enable_xdcr()
+        print "enable xdcr end"
         self.compact_bucket()
 
         self.workload = self.test_config.access_settings
